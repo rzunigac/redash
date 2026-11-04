@@ -75,7 +75,13 @@ ARG POETRY_OPTIONS="--no-root --no-interaction --no-ansi"
 # for LDAP authentication, install with `ldap3` group
 # disabled by default due to GPL license conflict
 ARG install_groups="main,all_ds,dev"
-RUN /etc/poetry/bin/poetry install --only $install_groups $POETRY_OPTIONS
+# Downloads persist in a cache mount between builds (not part of the image); fewer parallel downloads and
+# a longer read timeout (Poetry's default is 15 s) survive a flaky connection better.
+# A build with --no-cache can set CACHE_ID to start from an empty cache.
+ARG CACHE_ID=shared
+RUN --mount=type=cache,id=ff-poetry-$CACHE_ID,target=/root/.cache/pypoetry \
+    POETRY_INSTALLER_MAX_WORKERS=2 POETRY_REQUESTS_TIMEOUT=120 \
+    /etc/poetry/bin/poetry install --only $install_groups $POETRY_OPTIONS
 
 COPY --chown=redash . /app
 COPY --from=frontend-builder --chown=redash /frontend/client/dist /app/client/dist
