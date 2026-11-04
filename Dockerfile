@@ -67,7 +67,8 @@ WORKDIR /app
 ENV POETRY_VERSION=1.6.1
 ENV POETRY_HOME=/etc/poetry
 ENV POETRY_VIRTUALENVS_CREATE=false
-RUN curl -sSL https://install.python-poetry.org | python3 -
+# Poetry from PyPI at a fixed version, in its own virtualenv (not a script piped from the internet).
+RUN python3 -m venv "$POETRY_HOME" && "$POETRY_HOME/bin/pip" install --no-cache-dir "poetry==$POETRY_VERSION"
 
 COPY pyproject.toml poetry.lock ./
 
