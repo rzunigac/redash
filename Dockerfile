@@ -1,4 +1,4 @@
-FROM node:18-bookworm as frontend-builder
+FROM node:18-bookworm@sha256:c6ae79e38498325db67193d391e6ec1d224d96c693a8a4d943498556716d3783 AS frontend-builder
 
 RUN npm install --global --force yarn@1.22.19
 
@@ -27,7 +27,9 @@ COPY --chown=redash webpack.config.js /frontend/
 # Use `yarn run` to ensure the locally installed webpack is used
 RUN yarn clean && yarn build:viz && NODE_OPTIONS=--openssl-legacy-provider NODE_ENV=production yarn run webpack && mkdir -p /frontend/client/dist && touch /frontend/client/dist/multi_org.html && touch /frontend/client/dist/index.html
 
-FROM python:3.8-slim-bookworm
+# Python 3.8 (end of life). 3.10, the newest pyproject.toml allows, can't build cassandra-driver 3.21.0
+# and impyla 0.16.0 from the lockfile: their ez_setup.py fails with the current 3.10 standard library.
+FROM python:3.8-slim-bookworm@sha256:1d52838af602b4b5a831beb13a0e4d073280665ea7be7f69ce2382f29c5a613f
 
 EXPOSE 5000
 
